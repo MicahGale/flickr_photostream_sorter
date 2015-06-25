@@ -2,6 +2,7 @@ from datetime import datetime
 from os import environ
 from os.path import expanduser
 import json
+import time 
 
 import flickrapi
 
@@ -38,16 +39,21 @@ def main():
 
     for photo in  all_photos:
         date_taken = photo['datetaken']
-        date_taken = datetime.strptime(date_taken, '%Y-%m-%d %H:%M:%S')
+        date_taken = datetime.strptime(date_taken, '%Y-%m-%d %H:%M:%S') #convert date taken to a string
         date_posted = int(photo['dateupload'])
-        date_posted = datetime.fromtimestamp(date_posted)
+        date_posted = datetime.fromtimestamp(date_posted) #import date uploaded as a date time
         if date_posted != date_taken:
             print '       Updating "{}": change date posted from {} to {}'.format(photo['id'], date_posted, date_taken)
-            new_date_posted = datetime.strftime(date_taken, '%s')
-            flickr.photos_setDates(photo_id=photo['id'], date_posted=new_date_posted)
+            new_date_posted = time.mktime(date_taken.timetuple()) #convert to seconds since the unix epoch                   #datetime.strftime(date_taken, '%Y-%m-%d %H:%M:%S')
+	    try:
+                flickr.photos_setDates(photo_id=photo['id'], date_posted=new_date_posted) 
+            except flickrError as fuck_you:
+                fuck_you=sys.exec_info()[0]
+		print "I done fucked up."
+		print fuck_you
+	    print new_date_posted
         else:
             print '       Skipping "{}": dates match'.format(photo['id'])
-
     print '-----> Done!'
 
 if __name__ == "__main__":
